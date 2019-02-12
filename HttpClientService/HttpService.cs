@@ -20,7 +20,7 @@ namespace HttpClientService
         public HttpService(HttpServiceHelpers httpServiceHelpers)
         {
             _httpServiceHelpers = httpServiceHelpers;
-        }       
+        }
 
         //GenericHttpRequest
         public async Task<T> GenericHttpGet<T>(HttpParameters httpParameters)
@@ -83,10 +83,14 @@ namespace HttpClientService
                     .ConfigureAwait(true))
                 {
                     response.EnsureSuccessStatusCode();
-
                     Stream streamResponse = await response.Content.ReadAsStreamAsync();
-
                     return _httpServiceHelpers.DeserializeJsonFromStream<T>(streamResponse);
+
+                    throw new CustomApiException
+                    {
+                        StatusCode = (int)response.StatusCode,
+                        Content = streamResponse.ToString()
+                    };
                 }
             }
         }
