@@ -1,29 +1,25 @@
 ﻿using HttpClientService.Helpers;
-using HttpClientService.HttpServiceHelperMethods;
 using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace HttpClientService
 {
-    public class HttpService
+    public static class HttpService
     {
         //REF: https://johnthiriet.com/efficient-api-calls/
         //REF-GIT-Source: https://github.com/johnthiriet/EfficientHttpClient
 
         //Build a .nupkg from the solution folder in in the command line with 'dotnet pack --no-build'
 
-        public HttpServiceHelpers _httpServiceHelpers { get; }
 
-        public HttpService(HttpServiceHelpers httpServiceHelpers)
-        {
-            _httpServiceHelpers = httpServiceHelpers;
-        }
 
         //GenericHttpRequest
-        public async Task<T> GenericHttpGet<T>(HttpParameters httpParameters)
+        public static async Task<T> GenericHttpGet<T>(HttpParameters httpParameters)
         {
             string url = httpParameters.Id == Guid.Empty ? httpParameters.RequestUrl : String.Format("{0}/{1}", httpParameters.RequestUrl, httpParameters.Id);
 
@@ -34,9 +30,9 @@ namespace HttpClientService
                 var stream = await response.Content.ReadAsStreamAsync();
 
                 if (response.IsSuccessStatusCode)
-                    return _httpServiceHelpers.DeserializeJsonFromStream<T>(stream);
+                    return DeserializeJsonFromStream<T>(stream);
 
-                var content = await _httpServiceHelpers.StreamToStringAsync(stream);
+                var content = await StreamToStringAsync(stream);
 
                 throw new CustomApiException
                 {
@@ -47,7 +43,7 @@ namespace HttpClientService
         }
 
         //PostStreamAsyncQueryString
-        public async Task<T> PostStreamAsyncQueryString<T>(HttpParameters parameters)
+        public static async Task<T> PostStreamAsyncQueryString<T>(HttpParameters parameters)
         {
             string url = parameters.Id == Guid.Empty ? parameters.RequestUrl : String.Format("{0}/{1}", parameters.RequestUrl, parameters.Id);
 
@@ -58,9 +54,9 @@ namespace HttpClientService
                 var stream = await response.Content.ReadAsStreamAsync();
 
                 if (response.IsSuccessStatusCode)
-                    return _httpServiceHelpers.DeserializeJsonFromStream<T>(stream);
+                    return DeserializeJsonFromStream<T>(stream);
 
-                var content = await _httpServiceHelpers.StreamToStringAsync(stream);
+                var content = await StreamToStringAsync(stream);
                 throw new CustomApiException
                 {
                     StatusCode = (int)response.StatusCode,
@@ -70,11 +66,11 @@ namespace HttpClientService
         }
 
         //PostStreamAsync
-        public async Task<T> PostStreamAsyncContent<T>(HttpParameters parameters)
+        public static async Task<T> PostStreamAsyncContent<T>(HttpParameters parameters)
         {
             using (var client = new HttpClient())
             using (var request = new HttpRequestMessage(parameters.HttpVerb, parameters.RequestUrl))
-            using (var httpContent = _httpServiceHelpers.CreateHttpContent(parameters.Content))
+            using (var httpContent = CreateHttpContent(parameters.Content))
             {
                 request.Content = httpContent;
 
@@ -84,7 +80,7 @@ namespace HttpClientService
                 {
                     response.EnsureSuccessStatusCode();
                     Stream streamResponse = await response.Content.ReadAsStreamAsync();
-                    return _httpServiceHelpers.DeserializeJsonFromStream<T>(streamResponse);
+                    return DeserializeJsonFromStream<T>(streamResponse);
 
                     throw new CustomApiException
                     {
@@ -93,6 +89,67 @@ namespace HttpClientService
                     };
                 }
             }
+        }
+
+
+        //DeserializeJsonFromStream
+        private static T DeserializeJsonFromStream<T>(Stream stream)
+        {
+            if (stream == null || stream.CanRead == false)
+                return default(T);
+
+            using (var sr = new StreamReader(stream))
+            using (var jtr = new JsonTextReader(sr))
+            {
+                var jr = new JsonSerializer();
+                var searchResult = jr.Deserialize<T>(jtr);
+                return searchResult;
+            }
+        }
+
+        //StreamToStringAsync
+        private static async Task<string> StreamToStringAsync(Stream stream)
+        {
+            string content = null;
+
+            if (stream != null)
+            {
+                using (var sr = new StreamReader(stream))
+                {
+                    content = await sr.ReadToEndAsync();
+                }
+            }
+
+            return content;
+        }
+
+        //SerializeJsonIntoStream
+        public static void SerializeJsonIntoStream(object value, Stream stream)
+        {
+            using (var sw = new StreamWriter(stream, new UTF8Encoding(false), 1024, true))
+            using (var jtw = new JsonTextWriter(sw) { Formatting = Formatting.None })
+            {
+                var js = new JsonSerializer();
+                js.Serialize(jtw, value);
+                jtw.Flush();
+            }
+        }
+
+        //CreateHttpContent
+        private static HttpContent CreateHttpContent(object content)
+        {
+            HttpContent httpContent = null;
+
+            if (content != null)
+            {
+                var ms = new MemoryStream();
+                SerializeJsonIntoStream(content, ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                httpContent = new StreamContent(ms);
+                httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            }
+
+            return httpContent;
         }
     }
 }
