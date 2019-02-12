@@ -8,11 +8,16 @@ using System.Threading.Tasks;
 
 namespace HttpClientService
 {
-    public class HttpClientService
+    public class HttpService
     {
+        //REF: https://johnthiriet.com/efficient-api-calls/
+        //REF-GIT-Source: https://github.com/johnthiriet/EfficientHttpClient
+
+        //Build a .nupkg from the solution folder in in the command line with 'dotnet pack --no-build'
+
         public HttpServiceHelpers _httpServiceHelpers { get; }
 
-        public HttpClientService(HttpServiceHelpers httpServiceHelpers)
+        public HttpService(HttpServiceHelpers httpServiceHelpers)
         {
             _httpServiceHelpers = httpServiceHelpers;
         }       
@@ -24,7 +29,7 @@ namespace HttpClientService
 
             using (var client = new HttpClient())
             using (var request = new HttpRequestMessage(HttpMethod.Get, url))
-            using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, httpParameters.cancellationToken))
+            using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, httpParameters.CancellationToken))
             {
                 var stream = await response.Content.ReadAsStreamAsync();
 
@@ -48,7 +53,7 @@ namespace HttpClientService
 
             using (var client = new HttpClient())
             using (var request = new HttpRequestMessage(parameters.HttpVerb, url))
-            using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, parameters.cancellationToken))
+            using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, parameters.CancellationToken))
             {
                 var stream = await response.Content.ReadAsStreamAsync();
 
@@ -74,7 +79,7 @@ namespace HttpClientService
                 request.Content = httpContent;
 
                 using (var response = await client
-                    .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, parameters.cancellationToken)
+                    .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, parameters.CancellationToken)
                     .ConfigureAwait(true))
                 {
                     response.EnsureSuccessStatusCode();
