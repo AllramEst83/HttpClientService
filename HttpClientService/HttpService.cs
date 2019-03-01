@@ -25,8 +25,14 @@ namespace HttpClientService
 
             using (var client = new HttpClient())
             using (var request = new HttpRequestMessage(HttpMethod.Get, url))
-            using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, httpParameters.CancellationToken))
             {
+                if (httpParameters.JwtToken != String.Empty)
+                {
+                    client.DefaultRequestHeaders.Add(HttpConstants.Authorization, httpParameters.JwtToken);
+                }
+
+                var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, httpParameters.CancellationToken);
+
                 var stream = await response.Content.ReadAsStreamAsync();
 
                 if (response.IsSuccessStatusCode)

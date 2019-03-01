@@ -13,5 +13,6 @@ namespace HttpClientService.Helpers
         public string Id { get; set; }
         public object Content { get; set; }
         public HttpMethod HttpVerb { get; set; }
+        public string JwtToken { get; set; }
     }
 }
