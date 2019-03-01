@@ -10,7 +10,7 @@ namespace HttpClientService.Helpers
     {
         public string RequestUrl { get; set; }
         public CancellationToken CancellationToken { get; set; }
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public object Content { get; set; }
         public HttpMethod HttpVerb { get; set; }
     }

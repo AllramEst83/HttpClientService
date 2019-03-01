@@ -21,7 +21,7 @@ namespace HttpClientService
         //GenericHttpRequest
         public static async Task<T> GenericHttpGet<T>(HttpParameters httpParameters)
         {
-            string url = httpParameters.Id == Guid.Empty ? httpParameters.RequestUrl : String.Format("{0}/{1}", httpParameters.RequestUrl, httpParameters.Id);
+            string url = String.IsNullOrEmpty(httpParameters.Id) ? httpParameters.RequestUrl : String.Format("{0}?userId={1}", httpParameters.RequestUrl, httpParameters.Id);
 
             using (var client = new HttpClient())
             using (var request = new HttpRequestMessage(HttpMethod.Get, url))
@@ -45,7 +45,7 @@ namespace HttpClientService
         //PostStreamAsyncQueryString
         public static async Task<T> PostStreamAsyncQueryString<T>(HttpParameters parameters)
         {
-            string url = parameters.Id == Guid.Empty ? parameters.RequestUrl : String.Format("{0}/{1}", parameters.RequestUrl, parameters.Id);
+            string url = String.IsNullOrEmpty(parameters.Id) ? parameters.RequestUrl : String.Format("{0}/{1}", parameters.RequestUrl, parameters.Id);
 
             using (var client = new HttpClient())
             using (var request = new HttpRequestMessage(parameters.HttpVerb, url))
