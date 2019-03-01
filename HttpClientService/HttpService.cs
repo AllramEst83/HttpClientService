@@ -35,16 +35,27 @@ namespace HttpClientService
 
                 var stream = await response.Content.ReadAsStreamAsync();
 
-                if (response.IsSuccessStatusCode)
-                    return DeserializeJsonFromStream<T>(stream);
-
-                var content = await StreamToStringAsync(stream);
-
-                throw new CustomApiException
+                if (!response.IsSuccessStatusCode)
                 {
-                    StatusCode = (int)response.StatusCode,
-                    Content = content
-                };
+                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                    {
+                        Type t = typeof(T);
+                        object[] args = new object[] { 403 };
+                        T o = (T)Activator.CreateInstance(t, args);
+
+                        return o;
+
+                        //var content = await StreamToStringAsync(stream);
+                        //throw new CustomApiException
+                        //{
+                        //    StatusCode = (int)response.StatusCode,
+                        //    Content = content
+                        //};
+
+                    }
+                }
+
+                return DeserializeJsonFromStream<T>(stream);
             }
         }
 
