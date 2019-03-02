@@ -41,29 +41,42 @@ namespace HttpClientService
                     switch (response.StatusCode)
                     {
                         case System.Net.HttpStatusCode.Unauthorized:
-                            args = new object[] { 401 };
+                            args = new object[]
+                            {
+                                HttpConstants.UnauthorizedStatusCode ,
+                                HttpConstants.UnauthorizedError,
+                                HttpConstants.UnauthorizedDescription,
+                                HttpConstants.UnauthorizedCode
+                            };
+
                             break;
 
-                        case System.Net.HttpStatusCode.Forbidden :
+                        case System.Net.HttpStatusCode.Forbidden:
 
-                            args = new object[] { 403 };
+                            args = new object[]
+                            {
+                                HttpConstants.ForbiddenStatusCode,
+                                HttpConstants.ForbiddenSError,
+                                HttpConstants.ForbiddenDescription,
+                                HttpConstants.ForbiddenCode
+                            };
                             break;
                     }
 
-                        Type t = typeof(T);                      
-                        T o = (T)Activator.CreateInstance(t, args);
+                    Type t = typeof(T);
+                    T o = (T)Activator.CreateInstance(t, args);
 
-                        return o;
+                    return o;
 
-                        //var content = await StreamToStringAsync(stream);
-                        //throw new CustomApiException
-                        //{
-                        //    StatusCode = (int)response.StatusCode,
-                        //    Content = content
-                        //};
+                    //var content = await StreamToStringAsync(stream);
+                    //throw new CustomApiException
+                    //{
+                    //    StatusCode = (int)response.StatusCode,
+                    //    Content = content
+                    //};
 
-                    
-                    
+
+
                 }
 
                 return DeserializeJsonFromStream<T>(stream);
