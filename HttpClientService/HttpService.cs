@@ -37,10 +37,20 @@ namespace HttpClientService
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                    object[] args = null;
+                    switch (response.StatusCode)
                     {
-                        Type t = typeof(T);
-                        object[] args = new object[] { 403 };
+                        case System.Net.HttpStatusCode.Unauthorized:
+                            args = new object[] { 401 };
+                            break;
+
+                        case System.Net.HttpStatusCode.Forbidden :
+
+                            args = new object[] { 403 };
+                            break;
+                    }
+
+                        Type t = typeof(T);                      
                         T o = (T)Activator.CreateInstance(t, args);
 
                         return o;
@@ -52,7 +62,8 @@ namespace HttpClientService
                         //    Content = content
                         //};
 
-                    }
+                    
+                    
                 }
 
                 return DeserializeJsonFromStream<T>(stream);
