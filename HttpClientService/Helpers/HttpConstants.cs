@@ -14,7 +14,7 @@ namespace HttpClientService.Helpers
         public const string UnauthorizedCode = "unauthorized_access";
 
         public const int ForbiddenStatusCode = 403;
-        public const string ForbiddenSError = "Forbidden Access.";
+        public const string ForbiddenError = "Forbidden Access.";
         public const string ForbiddenDescription = "User is not authorized to access this resource";
         public const string ForbiddenCode = "forbidden_access";
 

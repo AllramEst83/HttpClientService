@@ -37,36 +37,9 @@ namespace HttpClientService
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    object[] args = null;
-                    switch (response.StatusCode)
-                    {
-                        case System.Net.HttpStatusCode.Unauthorized:
-                            args = new object[]
-                            {
-                                HttpConstants.UnauthorizedStatusCode ,
-                                HttpConstants.UnauthorizedError,
-                                HttpConstants.UnauthorizedDescription,
-                                HttpConstants.UnauthorizedCode
-                            };
+                    T newObject = NewObjectInstanceGenerator<T>(response.StatusCode);
 
-                            break;
-
-                        case System.Net.HttpStatusCode.Forbidden:
-
-                            args = new object[]
-                            {
-                                HttpConstants.ForbiddenStatusCode,
-                                HttpConstants.ForbiddenSError,
-                                HttpConstants.ForbiddenDescription,
-                                HttpConstants.ForbiddenCode
-                            };
-                            break;
-                    }
-
-                    Type t = typeof(T);
-                    T o = (T)Activator.CreateInstance(t, args);
-
-                    return o;
+                    return newObject;
 
                     //var content = await StreamToStringAsync(stream);
                     //throw new CustomApiException
@@ -84,50 +57,75 @@ namespace HttpClientService
         }
 
         //PostStreamAsyncQueryString
-        public static async Task<T> PostStreamAsyncQueryString<T>(HttpParameters parameters)
+        public static async Task<T> PostStreamAsyncQueryString<T>(HttpParameters httpParameters)
         {
-            string url = String.IsNullOrEmpty(parameters.Id) ? parameters.RequestUrl : String.Format("{0}/{1}", parameters.RequestUrl, parameters.Id);
+            string url = String.IsNullOrEmpty(httpParameters.Id) ? httpParameters.RequestUrl : String.Format("{0}/{1}", httpParameters.RequestUrl, httpParameters.Id);
 
             using (var client = new HttpClient())
-            using (var request = new HttpRequestMessage(parameters.HttpVerb, url))
-            using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, parameters.CancellationToken))
+            using (var request = new HttpRequestMessage(httpParameters.HttpVerb, url))
             {
+                if (httpParameters.JwtToken != String.Empty)
+                {
+                    client.DefaultRequestHeaders.Add(HttpConstants.Authorization, httpParameters.JwtToken);
+                }
+
+                var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, httpParameters.CancellationToken);
+
                 var stream = await response.Content.ReadAsStreamAsync();
 
-                if (response.IsSuccessStatusCode)
-                    return DeserializeJsonFromStream<T>(stream);
-
-                var content = await StreamToStringAsync(stream);
-                throw new CustomApiException
+                if (!response.IsSuccessStatusCode)
                 {
-                    StatusCode = (int)response.StatusCode,
-                    Content = content
-                };
+                    T newObject = NewObjectInstanceGenerator<T>(response.StatusCode);
+
+                    return newObject;
+                }
+
+                //var content = await StreamToStringAsync(stream);
+                //throw new CustomApiException
+                //{
+                //    StatusCode = (int)response.StatusCode,
+                //    Content = content
+                //};
+
+                return DeserializeJsonFromStream<T>(stream);
             }
         }
 
         //PostStreamAsync
-        public static async Task<T> PostStreamAsyncContent<T>(HttpParameters parameters)
+        public static async Task<T> PostStreamAsyncContent<T>(HttpParameters httpParameters)
         {
             using (var client = new HttpClient())
-            using (var request = new HttpRequestMessage(parameters.HttpVerb, parameters.RequestUrl))
-            using (var httpContent = CreateHttpContent(parameters.Content))
+            using (var request = new HttpRequestMessage(httpParameters.HttpVerb, httpParameters.RequestUrl))
+            using (var httpContent = CreateHttpContent(httpParameters.Content))
             {
                 request.Content = httpContent;
 
+                if (httpParameters.JwtToken != String.Empty)
+                {
+                    client.DefaultRequestHeaders.Add(HttpConstants.Authorization, httpParameters.JwtToken);
+                }
+
                 using (var response = await client
-                    .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, parameters.CancellationToken)
+                    .SendAsync(request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    httpParameters.CancellationToken)
                     .ConfigureAwait(true))
                 {
-                    response.EnsureSuccessStatusCode();
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        T newObject = NewObjectInstanceGenerator<T>(response.StatusCode);
+
+                        return newObject;
+                    }
+
                     Stream streamResponse = await response.Content.ReadAsStreamAsync();
                     return DeserializeJsonFromStream<T>(streamResponse);
 
-                    throw new CustomApiException
-                    {
-                        StatusCode = (int)response.StatusCode,
-                        Content = streamResponse.ToString()
-                    };
+                    //throw new CustomApiException
+                    //{
+                    //    StatusCode = (int)response.StatusCode,
+                    //    Content = streamResponse.ToString()
+                    //};
                 }
             }
         }
@@ -191,6 +189,50 @@ namespace HttpClientService
             }
 
             return httpContent;
+        }
+
+        private static T NewObjectInstanceGenerator<T>(System.Net.HttpStatusCode statusCode)
+        {
+            object[] args = null;
+            switch (statusCode)
+            {
+                case System.Net.HttpStatusCode.Unauthorized:
+                    args = new object[]
+                    {
+                                HttpConstants.UnauthorizedStatusCode ,
+                                HttpConstants.UnauthorizedError,
+                                HttpConstants.UnauthorizedDescription,
+                                HttpConstants.UnauthorizedCode
+                    };
+
+                    break;
+
+                case System.Net.HttpStatusCode.Forbidden:
+
+                    args = new object[]
+                    {
+                                HttpConstants.ForbiddenStatusCode,
+                                HttpConstants.ForbiddenError,
+                                HttpConstants.ForbiddenDescription,
+                                HttpConstants.ForbiddenCode
+                    };
+                    break;
+
+                default:
+                    args = new object[]
+                  {
+                                500,
+                                "Server Berakdown",
+                                "Server Berakdown",
+                                "Server Berakdown"
+                  };
+                    break;
+            }
+
+            Type t = typeof(T);
+            T objectInstance = (T)Activator.CreateInstance(t, args);
+
+            return objectInstance;
         }
     }
 }
