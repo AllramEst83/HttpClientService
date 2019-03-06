@@ -185,7 +185,7 @@ namespace HttpClientService
                 SerializeJsonIntoStream(content, ms);
                 ms.Seek(0, SeekOrigin.Begin);
                 httpContent = new StreamContent(ms);
-                httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                httpContent.Headers.ContentType = new MediaTypeHeaderValue(HttpConstants.MediaContentType_APPLICATION_JSON);
             }
 
             return httpContent;
@@ -199,10 +199,10 @@ namespace HttpClientService
                 case System.Net.HttpStatusCode.Unauthorized:
                     args = new object[]
                     {
-                                HttpConstants.UnauthorizedStatusCode ,
-                                HttpConstants.UnauthorizedError,
-                                HttpConstants.UnauthorizedDescription,
-                                HttpConstants.UnauthorizedCode
+                        HttpConstants.UnauthorizedStatusCode ,
+                        HttpConstants.UnauthorizedError,
+                        HttpConstants.UnauthorizedDescription,
+                        HttpConstants.UnauthorizedCode
                     };
 
                     break;
@@ -211,20 +211,20 @@ namespace HttpClientService
 
                     args = new object[]
                     {
-                                HttpConstants.ForbiddenStatusCode,
-                                HttpConstants.ForbiddenError,
-                                HttpConstants.ForbiddenDescription,
-                                HttpConstants.ForbiddenCode
+                        HttpConstants.ForbiddenStatusCode,
+                        HttpConstants.ForbiddenError,
+                        HttpConstants.ForbiddenDescription,
+                        HttpConstants.ForbiddenCode
                     };
                     break;
 
                 default:
                     args = new object[]
                   {
-                                500,
-                                "Server Berakdown",
-                                "Server Berakdown",
-                                "Server Berakdown"
+                        500,
+                        HttpConstants.ForbiddenStatusCode,
+                        HttpConstants.InternalServerError_Error,
+                        HttpConstants.InternalServerErrorCode
                   };
                     break;
             }
