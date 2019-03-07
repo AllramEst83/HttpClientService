@@ -119,7 +119,8 @@ namespace HttpClientService
                     }
 
                     Stream streamResponse = await response.Content.ReadAsStreamAsync();
-                    return DeserializeJsonFromStream<T>(streamResponse);
+
+                    return DeserializeJsonFromStream<T>(streamResponse); ;
 
                     //throw new CustomApiException
                     //{
