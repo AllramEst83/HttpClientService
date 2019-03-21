@@ -102,7 +102,7 @@ namespace HttpClientService
 
                 if (httpParameters.JwtToken != String.Empty)
                 {
-                    client.DefaultRequestHeaders.Add(HttpConstants.Authorization, httpParameters.JwtToken);
+                   client.DefaultRequestHeaders.Add(HttpConstants.Authorization, httpParameters.JwtToken);
                 }
 
                 using (var response = await client
@@ -222,9 +222,9 @@ namespace HttpClientService
                 default:
                     args = new object[]
                   {
-                        500,
-                        HttpConstants.ForbiddenStatusCode,
+                        HttpConstants.InternalServerErrorStatusCode,
                         HttpConstants.InternalServerError_Error,
+                        HttpConstants.InternalServerErrorDescription,
                         HttpConstants.InternalServerErrorCode
                   };
                     break;
